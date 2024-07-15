@@ -16,11 +16,13 @@ namespace Naukri.Physarum
         public Provider()
         {
             key = ProviderKey.Unique();
+            RegisterToContainer(this);
         }
 
         public Provider(ProviderKey Key)
         {
             key = Key;
+            RegisterToContainer(this);
         }
 
         protected Provider(IProvider provider)
@@ -28,6 +30,7 @@ namespace Naukri.Physarum
         {
             _ = provider ?? throw new ArgumentNullException(nameof(provider));
             key = provider.Key;
+            RegisterToContainer(provider);
         }
 
         #endregion
@@ -64,25 +67,10 @@ namespace Naukri.Physarum
             }
         }
 
-        protected override void HandleEvent(object sender, IElementEvent evt)
-        {
-            base.HandleEvent(sender, evt);
-
-            switch (evt)
-            {
-                case ElementEvents.Enable:
-                    RegisterToContainer();
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        private void RegisterToContainer()
+        private static void RegisterToContainer(IProvider provider)
         {
             var container = ProviderContainer.LocateOrCreate();
-            container.Register(this);
+            container.Register(provider);
         }
 
         private protected sealed override Notifier BuildContext()
