@@ -3,7 +3,7 @@ using Naukri.Physarum.Core;
 
 namespace Naukri.Physarum
 {
-    public interface IConsumer
+    public interface IConsumer : IElement
     {
         internal Listener Listener { get; }
     }
