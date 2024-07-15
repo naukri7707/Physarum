@@ -13,8 +13,6 @@ namespace Naukri.Physarum
 
             public TState State => StateProvider.State;
 
-            #region methods
-
             public bool SetState(TState state) => StateProvider.SetState(state);
 
             public bool SetState(Func<TState, TState> update) => StateProvider.SetState(update);
@@ -22,13 +20,14 @@ namespace Naukri.Physarum
             public async Task<bool> SetStateAsync(Func<TState, Task<TState>> update) =>
                 await StateProvider.SetStateAsync(update);
 
+            TState IStateProvider<TState>.Build() => Build();
+
             protected abstract TState Build();
 
             protected override Element<Notifier> BuildElement()
             {
-                return new StateProvider<TState>(Build, Key);
+                return new StateProvider<TState>(this);
             }
-            #endregion
         }
     }
 }

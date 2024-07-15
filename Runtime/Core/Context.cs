@@ -4,12 +4,12 @@ namespace Naukri.Physarum.Core
 {
     public abstract class Context : IContext
     {
-        private protected Context(IElement self)
+        private protected Context(Element element)
         {
-            this.self = self;
+            this.element = element;
         }
 
-        internal readonly IElement self;
+        internal readonly Element element;
 
         #region methods
 
@@ -25,10 +25,19 @@ namespace Naukri.Physarum.Core
             return ProviderLocator.Get<TProvider>(key);
         }
 
+        public TProvider Read<TProvider>(ProviderKeyOf<TProvider> key)
+            where TProvider : IProvider
+        {
+            return ProviderLocator.Get<TProvider>(key);
+        }
+
         public abstract TProvider Watch<TProvider>()
             where TProvider : IProvider;
 
         public abstract TProvider Watch<TProvider>(ProviderKey key)
+            where TProvider : IProvider;
+
+        public abstract TProvider Watch<TProvider>(ProviderKeyOf<TProvider> key)
             where TProvider : IProvider;
 
         public abstract Subscription Listen<TProvider>()
@@ -43,12 +52,18 @@ namespace Naukri.Physarum.Core
         public abstract Subscription Listen<TProvider>(ProviderKey key, out TProvider provider)
             where TProvider : IProvider;
 
+        public abstract Subscription Listen<TProvider>(
+            ProviderKeyOf<TProvider> key,
+            out TProvider provider
+        )
+            where TProvider : IProvider;
+
         public abstract Subscription Listen<TProvider>(TProvider provider)
             where TProvider : IProvider;
 
         public void Dispatch(IElementEvent evt)
         {
-            self.HandleEvent(self, evt);
+            Element.DispatchEvent(element, evt);
         }
 
         public abstract void DispatchListeners(IElementEvent evt);

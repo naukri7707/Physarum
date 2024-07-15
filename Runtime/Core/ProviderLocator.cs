@@ -8,7 +8,7 @@ namespace Naukri.Physarum.Core
         public static T Get<T>()
             where T : IProvider
         {
-            var key = ProviderKey.FromType(typeof(T));
+            var key = ProviderKey.Create(typeof(T));
 
             return Get<T>(key);
         }

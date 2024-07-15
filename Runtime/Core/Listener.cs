@@ -6,7 +6,7 @@ namespace Naukri.Physarum.Core
 {
     public class Listener : Context
     {
-        internal Listener(IElement self)
+        internal Listener(Element self)
             : base(self) { }
 
         internal HashSet<Notifier> notifiers = new();
@@ -23,6 +23,13 @@ namespace Naukri.Physarum.Core
         public override TProvider Watch<TProvider>(ProviderKey key)
         {
             var provider = Read<TProvider>(key);
+            Subscribe(provider.Notifier);
+            return provider;
+        }
+
+        public override TProvider Watch<TProvider>(ProviderKeyOf<TProvider> key)
+        {
+            var provider = Read(key);
             Subscribe(provider.Notifier);
             return provider;
         }
@@ -49,6 +56,15 @@ namespace Naukri.Physarum.Core
             return Listen(provider);
         }
 
+        public override Subscription Listen<TProvider>(
+            ProviderKeyOf<TProvider> key,
+            out TProvider provider
+        )
+        {
+            provider = Read(key);
+            return Listen(provider);
+        }
+
         public override Subscription Listen<TProvider>(TProvider provider)
         {
             _ = provider ?? throw new ArgumentNullException(nameof(provider));
@@ -63,7 +79,7 @@ namespace Naukri.Physarum.Core
         internal void Subscribe(Notifier notifier)
         {
             notifier.listeners.Add(this);
-            notifier.self.EnsureInitialize(); // Start the notifier's element if not started.
+            notifier.element.EnsureInitialize(); // Start the notifier's element if not started.
             notifiers.Add(notifier);
         }
 

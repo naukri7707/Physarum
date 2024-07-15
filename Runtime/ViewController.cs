@@ -2,38 +2,22 @@ using System;
 
 namespace Naukri.Physarum
 {
-    public interface IViewController { }
+    public interface IViewController<TState> : IStateProvider<TState>
+        where TState : IEquatable<TState> { }
 
-    public partial class ViewController<TState> : StateProvider<TState>, IViewController
+    public partial class ViewController<TState> : StateProvider<TState>, IViewController<TState>
         where TState : IEquatable<TState>
     {
         #region constructors
 
-        public ViewController(Func<IContext, TState> build, bool enable = true)
-            : base(build)
-        {
-            if (enable)
-            {
-                Enable();
-            }
-            EnsureInitialize();
-        }
-
-        public ViewController(Func<IContext, TState> build, ProviderKey key, bool enable = true)
-            : base(build, key)
-        {
-            if (enable)
-            {
-                Enable();
-            }
-            EnsureInitialize();
-        }
-
-        protected ViewController(Func<TState> build)
+        public ViewController(Func<IContext, TState> build)
             : base(build) { }
 
-        protected ViewController(Func<TState> build, ProviderKey key)
+        public ViewController(Func<IContext, TState> build, ProviderKey key)
             : base(build, key) { }
+
+        protected ViewController(IViewController<TState> viewController)
+            : base(viewController) { }
 
         #endregion
 
