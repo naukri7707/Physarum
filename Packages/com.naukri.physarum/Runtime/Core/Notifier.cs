@@ -5,17 +5,17 @@ namespace Naukri.Physarum.Core
 {
     public class Notifier : Listener
     {
-        internal Notifier(IElement self)
+        internal Notifier(Element self)
             : base(self) { }
 
         internal HashSet<Listener> listeners = new();
 
         public override void DispatchListeners(IElementEvent evt)
         {
-            var enabledListeners = listeners.Where(it => it.self.IsEnable).ToArray();
+            var enabledListeners = listeners.Where(it => it.element.IsEnable).ToArray();
             foreach (var listener in enabledListeners)
             {
-                listener.self.HandleEvent(self, evt);
+                Element.DispatchEvent(listener.element, evt);
             }
         }
 

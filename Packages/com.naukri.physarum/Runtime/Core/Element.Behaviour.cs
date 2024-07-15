@@ -1,10 +1,10 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace Naukri.Physarum.Core
 {
     public abstract partial class Element<TContext>
-        where TContext : IContext
     {
         public abstract class Behaviour : MonoBehaviour, IElement
         {
@@ -14,6 +14,11 @@ namespace Naukri.Physarum.Core
             public bool IsInitialized => Element.IsInitialized;
             public bool IsEnable => Element.IsEnable;
 
+            [SuppressMessage(
+                "Style",
+                "IDE1006",
+                Justification = "Lowercase 'ctx' intentionally used as field-like accessor"
+            )]
             protected IContext ctx
             {
                 get
@@ -28,7 +33,6 @@ namespace Naukri.Physarum.Core
                 }
             }
 
-            IContext IElement.ctx => Element.ctx;
             private protected Element<TContext> Element => element;
             #endregion
 
@@ -37,9 +41,7 @@ namespace Naukri.Physarum.Core
 
             public void Disable() => enabled = false;
 
-            IContext IElement.BuildContext() => Element.BuildContext();
-
-            void IElement.EnsureInitialize() => Element.EnsureInitialize();
+            public void Post(Action<IContext> action) => Element.Post(action);
 
             void IElement.HandleEvent(object sender, IElementEvent evt) => HandleEvent(sender, evt);
 
@@ -53,8 +55,7 @@ namespace Naukri.Physarum.Core
 
             protected virtual void Start() => Element.EnsureInitialize();
 
-            protected virtual void HandleEvent(object sender, IElementEvent evt) =>
-                Element.HandleEvent(sender, evt);
+            protected virtual void HandleEvent(object sender, IElementEvent evt) { }
 
             protected abstract Element<TContext> BuildElement();
             #endregion
