@@ -4,9 +4,9 @@ namespace Naukri.Physarum
 {
     public interface IContext : IDisposable
     {
-        TProvider Find<TProvider>()
+        TProvider Read<TProvider>()
             where TProvider : IProvider;
-        TProvider Find<TProvider>(ProviderKey key)
+        TProvider Read<TProvider>(ProviderKey key)
             where TProvider : IProvider;
         TProvider Watch<TProvider>()
             where TProvider : IProvider;
