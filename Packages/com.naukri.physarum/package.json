@@ -1,7 +1,8 @@
 {
   "name": "com.naukri.physarum",
+  "author": "Naukri",
   "displayName": "Physarum",
   "version": "0.1.0",
   "unity": "2024.1",
-  "description": "Replace this string with your own description of the package. This description appears in the Package Manager window when the user selects this package from the list. \n\nFor best results, use this text to summarize: \n\u25aa What the package does \n\u25aa How it can benefit the user \n\nNote: Special formatting characters are supported, including line breaks ('\\n') and bullets ('\\u25AA')."
+  "description": "Physarum is a reactive framework for Unity.\n\nKey features:\n\u25AA Integrates state management, dependency injection, and service locator\n\u25AA Simplifies complex system design\n\u25AA Enhances game development efficiency and flexibility\n\nWith Physarum, developers can:\n\u25AA Easily build scalable game architectures\n\u25AA Better manage and maintain large projects\n\u25AA Focus on game logic rather than low-level implementations\n\nIdeal for Unity developers seeking efficient and maintainable game development solutions."
 }
