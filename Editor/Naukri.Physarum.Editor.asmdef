@@ -1,0 +1,18 @@
+{
+    "name": "Naukri.Physarum.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Naukri.Physarum"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
