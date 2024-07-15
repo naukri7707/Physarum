@@ -10,16 +10,9 @@ namespace Naukri.Physarum
 
     public partial class Consumer : Element<Listener>, IConsumer
     {
-        public Consumer(Action<IContext> build, bool enable = true)
+        public Consumer(Action<IContext> build)
         {
             this.build = () => build(ctx);
-
-            if (enable)
-            {
-                Enable();
-            }
-
-            EnsureInitialize();
         }
 
         protected Consumer(Action build)

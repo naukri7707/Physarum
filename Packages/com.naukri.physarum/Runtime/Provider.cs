@@ -11,15 +11,26 @@ namespace Naukri.Physarum
 
     public partial class Provider : Element<Notifier>, IProvider
     {
-        protected Provider()
+        #region constructors
+
+        public Provider()
         {
             key = ProviderKey.Unique();
         }
 
-        protected Provider(ProviderKey Key)
+        public Provider(ProviderKey Key)
         {
             key = Key;
         }
+
+        protected Provider(IProvider provider)
+            : base(provider)
+        {
+            _ = provider ?? throw new ArgumentNullException(nameof(provider));
+            key = provider.Key;
+        }
+
+        #endregion
 
         private readonly ProviderKey key;
 
@@ -39,9 +50,46 @@ namespace Naukri.Physarum
             }
         }
 
+        #region methods
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                if (ProviderContainer.TryLocate(out var container))
+                {
+                    container.Unregister(this);
+                }
+            }
+        }
+
+        protected override void HandleEvent(object sender, IElementEvent evt)
+        {
+            base.HandleEvent(sender, evt);
+
+            switch (evt)
+            {
+                case ElementEvents.Enable:
+                    RegisterToContainer();
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void RegisterToContainer()
+        {
+            var container = ProviderContainer.LocateOrCreate();
+            container.Register(this);
+        }
+
         private protected sealed override Notifier BuildContext()
         {
             return new Notifier(this);
         }
+
+        #endregion
     }
 }

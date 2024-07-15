@@ -11,6 +11,7 @@ namespace Naukri.Physarum
         public bool SetState(TState state);
         public bool SetState(Func<TState, TState> update);
         public Task<bool> SetStateAsync(Func<TState, Task<TState>> update);
+        internal TState Build();
     }
 
     public partial class StateProvider<TState> : Provider, IStateProvider<TState>
@@ -18,38 +19,22 @@ namespace Naukri.Physarum
     {
         #region constructors
 
-        public StateProvider(Func<IContext, TState> build, bool enable = true)
+        public StateProvider(Func<IContext, TState> build)
         {
             this.build = () => build(ctx);
-            if (enable)
-            {
-                Enable();
-            }
-
-            EnsureInitialize();
         }
 
-        public StateProvider(Func<IContext, TState> build, ProviderKey key, bool enable = true)
+        public StateProvider(Func<IContext, TState> build, ProviderKey key)
             : base(key)
         {
             this.build = () => build(ctx);
-            if (enable)
-            {
-                Enable();
-            }
-
-            EnsureInitialize();
         }
 
-        protected StateProvider(Func<TState> build)
+        protected StateProvider(IStateProvider<TState> stateProvider)
+            : base(stateProvider)
         {
-            this.build = build;
-        }
-
-        protected StateProvider(Func<TState> build, ProviderKey key)
-            : base(key)
-        {
-            this.build = build;
+            _ = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
+            build = stateProvider.Build;
         }
 
         #endregion
@@ -61,7 +46,7 @@ namespace Naukri.Physarum
         {
             get
             {
-                AssertIsActive();
+                EnsureActive();
                 return state;
             }
         }
@@ -70,13 +55,13 @@ namespace Naukri.Physarum
 
         public bool SetState(TState state)
         {
-            AssertIsActive();
+            EnsureActive();
             return SetStateImpl(state);
         }
 
         public bool SetState(Func<TState, TState> update)
         {
-            AssertIsActive();
+            EnsureActive();
             _ = update ?? throw new ArgumentNullException(nameof(update));
 
             var oldState = state;
@@ -86,13 +71,15 @@ namespace Naukri.Physarum
 
         public async Task<bool> SetStateAsync(Func<TState, Task<TState>> update)
         {
-            AssertIsActive();
+            EnsureActive();
             _ = update ?? throw new ArgumentNullException(nameof(update));
 
             var oldState = state;
             var newState = await update(oldState);
             return SetStateImpl(newState);
         }
+
+        TState IStateProvider<TState>.Build() => build();
 
         protected override void HandleEvent(object sender, IElementEvent evt)
         {

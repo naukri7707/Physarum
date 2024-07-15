@@ -6,13 +6,13 @@ namespace Naukri.Physarum
     {
         public new abstract class Behaviour : Element<Notifier>.Behaviour, IProvider
         {
-            public virtual ProviderKey Key => ProviderKey.FromType(GetType());
+            public virtual ProviderKey Key => ProviderKey.Create(GetType());
 
             Notifier IProvider.Notifier => (Notifier)ctx;
 
             protected override Element<Notifier> BuildElement()
             {
-                return new Provider(Key);
+                return new Provider(this);
             }
         }
     }
