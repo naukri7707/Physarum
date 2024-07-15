@@ -41,8 +41,7 @@ namespace Naukri.Physarum.Core
 
             void IElement.EnsureInitialize() => Element.EnsureInitialize();
 
-            void IElement.HandleEvent(object sender, IElementEvent evt) =>
-                Element.HandleEvent(sender, evt);
+            void IElement.HandleEvent(object sender, IElementEvent evt) => HandleEvent(sender, evt);
 
             protected virtual void Awake() => element = BuildElement();
 
@@ -53,6 +52,9 @@ namespace Naukri.Physarum.Core
             protected virtual void OnDisable() => Element.Disable();
 
             protected virtual void Start() => Element.EnsureInitialize();
+
+            protected virtual void HandleEvent(object sender, IElementEvent evt) =>
+                Element.HandleEvent(sender, evt);
 
             protected abstract Element<TContext> BuildElement();
             #endregion
