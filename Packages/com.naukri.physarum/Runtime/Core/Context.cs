@@ -13,13 +13,13 @@ namespace Naukri.Physarum.Core
 
         #region methods
 
-        public TProvider Find<TProvider>()
+        public TProvider Read<TProvider>()
             where TProvider : IProvider
         {
             return ProviderLocator.Get<TProvider>();
         }
 
-        public TProvider Find<TProvider>(ProviderKey key)
+        public TProvider Read<TProvider>(ProviderKey key)
             where TProvider : IProvider
         {
             return ProviderLocator.Get<TProvider>(key);

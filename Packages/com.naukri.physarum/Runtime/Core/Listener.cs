@@ -15,14 +15,14 @@ namespace Naukri.Physarum.Core
 
         public override TProvider Watch<TProvider>()
         {
-            var provider = Find<TProvider>();
+            var provider = Read<TProvider>();
             Subscribe(provider.Notifier);
             return provider;
         }
 
         public override TProvider Watch<TProvider>(ProviderKey key)
         {
-            var provider = Find<TProvider>(key);
+            var provider = Read<TProvider>(key);
             Subscribe(provider.Notifier);
             return provider;
         }
@@ -39,13 +39,13 @@ namespace Naukri.Physarum.Core
 
         public override Subscription Listen<TProvider>(out TProvider provider)
         {
-            provider = Find<TProvider>();
+            provider = Read<TProvider>();
             return Listen(provider);
         }
 
         public override Subscription Listen<TProvider>(ProviderKey key, out TProvider provider)
         {
-            provider = Find<TProvider>(key);
+            provider = Read<TProvider>(key);
             return Listen(provider);
         }
 
