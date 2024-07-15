@@ -29,6 +29,16 @@ namespace Naukri.Physarum
         {
             return new ProviderKeyOf<TProvider, T>(key);
         }
+
+        public static implicit operator ProviderKeyOf<TProvider>(int key)
+        {
+            return new ProviderKeyOf<TProvider, int>(key);
+        }
+
+        public static implicit operator ProviderKeyOf<TProvider>(string key)
+        {
+            return new ProviderKeyOf<TProvider, string>(key);
+        }
     }
 
     internal record ProviderKeyOf<TProvider, T>(T Key) : ProviderKeyOf<TProvider>
