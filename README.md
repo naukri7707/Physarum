@@ -1,229 +1,172 @@
-# Package Starter Kit
+# Physarum
 
-The purpose of this starter kit is to provide the data structure and development guidelines for new packages meant for the **Unity Package Manager (UPM)**.
+Physarum 是一個受 Riverpod 啟發，適用於 Unity 的響應式框架。透過 Physarum 可以為你完成狀態管理、依賴注入和服務定位等功能。創建可擴展且易於維護的遊戲架構。
 
-## Are you ready to become a package?
-The Package Manager is a work in progress for Unity. Because of that, your package needs to meet these criteria to become an official Unity package:
-- **Your code accesses public Unity C# APIs only.**
-- **Your code doesn't require security, obfuscation, or conditional access control.**
+## 特色
 
+- **提供者-消費者模式**: 實現依賴解耦和關注點分離，提供者專注於狀態管理，消費者自動響應狀態變化，降低組件間的耦合度。
+- **響應式程式設計**: 自動回應狀態變化，減少手動同步的需求。
+- **靈活的狀態管理**: 輕鬆建立和管理複雜狀態，具有型別安全的提供者。
+- **事件系統**: 內建事件系統，用於應用程式不同部分之間的通訊。
 
-## Package structure
+## 安裝
 
-```none
-<root>
-  ├── package.json
-  ├── README.md
-  ├── CHANGELOG.md
-  ├── Third Party Notices.md
-  ├── Editor
-  │   ├── Naukri7707.Physarum.Editor.asmdef
-  │   └── EditorExample.cs
-  ├── Runtime
-  │   ├── Naukri7707.Physarum.asmdef
-  │   └── RuntimeExample.cs
-  ├── Tests
-  │   ├── .tests.json
-  │   ├── Editor
-  │   │   ├── Naukri7707.Physarum.Editor.Tests.asmdef
-  │   │   └── EditorExampleTest.cs
-  │   └── Runtime
-  │        ├── Naukri7707.Physarum.Tests.asmdef
-  │        └── RuntimeExampleTest.cs
-  ├── Samples
-  │   └── Example
-  │       ├── .sample.json
-  │       └── SampleExample.cs
-  └── Documentation
-       ├── Physarum.md
-       └── Images
+1. 在您的 Unity 專案中，打開 Package Manager。
+2. 點擊 "+" 按鈕，選擇 "Add package from git URL"。
+3. 輸入 `https://github.com/naukri7707/Physarum.git`。
+4. 點擊 "Add"。
+
+## 快速開始
+
+這裡提供一個計數器的範例。
+
+1. 創建一個提供者：
+
+```csharp
+public class CounterProvider : StateProvider<int>.Behaviour
+{
+    protected override int Build()
+    {
+        // 初始狀態
+        return 0;
+    }
+
+    public void AddOne()
+    {
+        // 更新並回傳一個新的狀態實例
+        SetState(s => s + 1);
+    }
+}
 ```
 
-## Develop your package
-Package development works best within the Unity Editor.  Here's how to get started:
-
-1. Enter your package name. The name you choose should contain your default organization followed by the name you typed. For example: `Naukri7707.Physarum`.
-
-2. [Enter the information](#FillOutFields) for your package in the `package.json` file.
-
-3. [Rename and update](#Asmdef) assembly definition files.
-
-4. [Document](#Doc) your package.
-
-5. [Add samples](#Populate) to your package (code & assets).
-
-6. [Validate](#Valid) your package.
-
-7. [Add tests](#Tests) to your package.
-
-8. Update the `CHANGELOG.md` file. 
-
-    Every new feature or bug fix should have a trace in this file. For more details on the chosen changelog format, see [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
-
-9. Make sure your package [meets all legal requirements](#Legal).
-
-10. Publish your package.
-
-
-
-<a name="FillOutFields"></a>
-### Completing the package manifest
-
-You can either modify the package manifest (`package.json`) file directly in the Inspector or by using an external editor. 
-
-To use the Inspector, select the `package.json` file in the Project browser. The **Package Physarum Manifest** page opens for editing.
-
-Update these required attributes in the `package.json` file: 
-
-| **Attribute name:** | **Description:**                                             |
-| ------------------- | ------------------------------------------------------------ |
-| **name**            | The officially registered package name. This name must conform to the [Unity Package Manager naming convention](https://docs.unity3d.com/Manual/upm-manifestPkg.html#name), which uses reverse domain name notation. For example: <br />`"com.[YourCompanyName].[your-package-name]"` |
-| **displayName**     | A user-friendly name to appear in the Unity Editor (for example, in the Project Browser, the Package Manager window, etc.). For example: <br />`"Terrain Builder SDK"` <br/>__NOTE:__ Use a display name that will help users understand what your package is intended for. |
-| **version**         | The package version number (**'MAJOR.MINOR.PATCH"**). This value must respect [semantic versioning](http://semver.org/). For more information, see [Package version](https://docs.unity3d.com/Manual/upm-manifestPkg.html#pkg-ver) in the Unity User Manual. |
-| **unity**           | The lowest Unity version the package is compatible with. If omitted, the package is considered compatible with all Unity versions. <br /><br />The expected format is "**&lt;MAJOR&gt;.&lt;MINOR&gt;**" (for example, **2018.3**). |
-| **description**     | A brief description of the package. This is the text that appears in the [details view](upm-ui-details) of the Packages window. Any [UTF-8](https://en.wikipedia.org/wiki/UTF-8) character code is supported. This means that you can use special formatting character codes, such as line breaks (**\n**) and bullets (**\u25AA**). |
-
-Update the following recommended fields in file **package.json**:
-
-| **Attribute name:** | **Description:**                                             |
-| ------------------- | ------------------------------------------------------------ |
-| **dependencies**    | A map of package dependencies. Keys are package names, and values are specific versions. They indicate other packages that this package depends on. For more information, see [Dependencies](https://docs.unity3d.com/Manual/upm-dependencies.html) in the Unity User Manual.<br /><br />**NOTE**: The Package Manager does not support range syntax, only **SemVer** versions. |
-| **keywords**        | An array of keywords used by the Package Manager search APIs. This helps users find relevant packages. |
-
-
-
-<a name="Asmdef"></a>
-### Updating the Assembly Definition files
-
-You must associate scripts inside a package to an assembly definition file (.asmdef). Assembly definition files are the Unity equivalent to a C# project in the .NET ecosystem. You must set explicit references in the assembly definition file to other assemblies (whether in the same package or in external packages). See [Assembly Definitions](https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html) for more details.
-
-Use these conventions for naming and storing your assembly definition files to ensure that the compiled assembly filenames follow the [.NET Framework Design Guidelines](https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/):
-
-* Store Editor-specific code under a root editor assembly definition file:
-
-  `Editor/Naukri7707.Physarum.Editor.asmdef`
-
-* Store runtime-specific code under a root runtime assembly definition file:
-
-  `Runtime/Naukri7707.Physarum.asmdef`
-
-* Configure related test assemblies for your editor and runtime scripts:
-
-  `Tests/Editor/Naukri7707.Physarum.Editor.Tests.asmdef`
-
-  `Tests/Runtime/Naukri7707.Physarum.Tests.asmdef`
-
-To get a more general view of a recommended package folder layout, see [Package layout](https://docs.unity3d.com/Manual/cus-layout.html).
-
-
-
-<a name="Doc"></a>
-### Providing documentation
-
-Use the `Documentations~/Physarum.md` documentation file to create preliminary, high-level documentation. This document should introduce users to the features and sample files included in your package.  Your package documentation files will be used to generate online and local docs, available from the Package Manager UI.
-
-**Document your public APIs**
-* All public APIs need to be documented with **XmlDoc**.
-* API documentation is generated from [XmlDoc tags](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/xmldoc/xml-documentation-comments) included with all public APIs found in the package. See [Editor/EditorExample.cs](Editor/EditorExample.cs) for an example.
-
-
-
-
-<a name="Populate"></a>
-### Adding Assets to your package
-
-If your package contains a sample, rename the `Samples/Example` folder, and update the `.sample.json` file in it.
-
-In the case where your package contains multiple samples, you can make a copy of the `Samples/Example` folder for each sample, and update the `.sample.json` file accordingly.
-
-Similar to `.tests.json` file, there is a `"createSeparatePackage"` field in `.sample.json`. If set to true, the CI will create a separate package for the sample.
-
-Delete the `Samples` folder altogether if your package does not need samples.
-
-As of Unity release 2019.1, the Package Manager recognizes the `/Samples` directory in a package. Unity doesn't automatically import samples when a user adds the package to a Project. However, users can click a button in the details view of a package in the **Packages** window to optionally import samples into their `/Assets` directory.
-
-
-
-
-<a name="Valid"></a>
-### Validating your package
-
-Before you publish your package, you need to make sure that it passes all the necessary validation checks by using the Package Validation Suite extension (optional).
-
-Once you install the Validation Suite package, a **Validate** button appears in the details view of a package in the **Packages** window. To install the extension, follow these steps:
-
-1. Point your Project manifest to a staging registry by adding this line to the manifest: 
-    `"registry": "https://staging-packages.unity.com"`
-2. Install the **Package Validation Suite v0.3.0-preview.13** or above from the **Packages** window in Unity. Make sure the package scope is set to **All Packages**, and select **Show preview packages** from the **Advanced** menu.
-3. After installation, a **Validate** button appears in the **Packages** window. Click the button to run a series of tests, then click the **See Results** button for additional information:
-    * If it succeeds, a green bar with a **Success** message appears.
-    * If it fails, a red bar with a **Failed** message appears.
-
-**NOTE:** The validation suite is still in preview.
-
-
-
-
-<a name="Tests"></a>
-### Adding tests to your package
-
-All packages must contain tests.  Tests are essential for Unity to ensure that the package works as expected in different scenarios.
-
-**Editor tests**
-* Write all your Editor Tests in `Tests/Editor`
-
-**Playmode Tests**
-
-* Write all your Playmode Tests in `Tests/Runtime`.
-
-#### Separating the tests from the package
-
-You can create a separate package for the tests, which allows you to exclude a large number of tests and Assets from being published in your main package, while still making it easy to test it.
-
-Open the `Tests/.tests.json` file and set the **createSeparatePackage** attribute:
-
-| **Value to set:** | **Result:**                                                  |
-| ----------------- | ------------------------------------------------------------ |
-| **true**          | CI creates a separate package for these tests. At publish time, the Package Manager adds metadata to link the packages together. |
-| **false**         | Keep the tests as part of the published package.             |
-
-
-
-<a name="Legal"></a>
-### Meeting the legal requirements
-
-You can use the Third Party Notices.md file to make sure your package meets any legal requirements. For example, here is a sample license file from the Unity Timeline package:
-
-```
-Unity Timeline copyright © 2017-2019 Unity Technologies ApS
-
-Licensed under the Unity Companion License for Unity-dependent projects--see [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License).
-
-Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
-
+2. 創建一個消費者：
+
+```csharp
+public class CounterConsumer : Consumer.Behaviour
+{
+    protected override void Build()
+    {
+        // 建構時尋找並監聽提供者，框架會排除已經訂閱過的 Provider 所以你不用擔心重複註冊的問題
+        var provider = ctx.Watch<CounterProvider>();
+        print(provider.State);
+    }
+}
 ```
 
+3. 最後將他們掛載到場景就完成了，之後在 `Start` 時期 `Consumer` 會調用一次 `Build` 完成訂閱和首次建構。之後由於訂閱了 `CounterProvider` 的原因每當你調用 `CounterProvider.AddOne()` 時系統便會再次呼叫 `CounterConsumer.Build()` 以更新狀態。
+4. 你也可以使用同時具有兩者特性的 `ViewController` 合併邏輯以減少腳本數量，這在 UI 設計時很方便。
 
+```csharp
+public class CounterViewController : ViewController<int>.Behaviour
+{
+    public void AddOne()
+    {
+        SetState(s => s + 1);
+    }
 
-#### Third Party Notices
-
-If your package has third-party elements, you can include the licenses in a Third Party Notices.md file. You can include a **Component Name**, **License Type**, and **Provide License Details** section for each license you want to include. For example:
-
-```
-This package contains third-party software components governed by the license(s) indicated below:
-
-Component Name: Semver
-
-License Type: "MIT"
-
-[SemVer License](https://github.com/myusername/semver/blob/master/License.txt)
-
-Component Name: MyComponent
-
-License Type: "MyLicense"
-
-[MyComponent License](https://www.mycompany.com/licenses/License.txt)
-
+    protected override int Build()
+    {
+        // ViewController 會監聽自己本身的狀態變化，所以這裡雖然沒有監聽相關的程式碼，但 CounterViewController 仍會在狀態變化時重建
+        print(State);
+        return State;
+    }
+}
 ```
 
-**NOTE**: Any URLs you use should point to a location that contains the reproduced license and the copyright information (if applicable).
+5. 值得注意的是， `Provider` 也具有 `Consumer` 的特性。這意味著 `Provider` 可以監聽其他 `Provider` 的狀態變化，實現更複雜的狀態管理邏輯。例如：
+
+```csharp
+public class CompositeProvider : StateProvider<int>.Behaviour
+{
+    protected override int Build()
+    {
+        var counterProvider = ctx.Watch<CounterProvider>();
+        return counterProvider.State * 2;
+    }
+}
+```
+
+## 注意事項
+
+遵循這些注意事項將幫助您更有效地使用 Physarum 框架，並避免常見的陷阱和錯誤。
+
+### 1. 永遠使用 SetState 更新狀態
+
+- 在更新狀態時，應該始終使用 `SetState` 方法返回一個新的狀態實例，而不是直接修改從 `State` 獲得的當前狀態實例的成員。
+- 對於複雜的類型，建議使用 C# 的 `record` 類型和 `with` 關鍵字來輔助完成狀態更新。這樣可以確保狀態的不可變性，並提高代碼的可讀性。
+
+例如：
+
+```csharp
+public record MyState(int Count, string Name);
+
+public class MyProvider : StateProvider<MyState>.Behaviour
+{
+    protected override MyState Build() => new MyState(0, "Initial");
+
+    public void UpdateName(string newName)
+    {
+        SetState(s => s with { Name = newName });
+    }
+}
+```
+
+### 2. 匿名 Provider / Consumer 的使用
+
+- Physarum 提供了非繼承自 `MonoBehaviour` 的匿名版本。這可用於為已有基底類別的物件添加 Provider / Consumer 特性。實際上，Physarum 提供的 Behaviour 也是通過此方法實現的。
+- 使用匿名版本時需注意，其 Key 不會被加入到快取中。因此，你需要直接通過實例來操作，或定義專用的 Resolver 和 `ProviderKey` 來從 `ProviderContainer` 快取中獲取實例。
+
+```csharp
+StateProvider<int> myProvider;
+Consumer myConsumer;
+
+public void Start()
+{
+    myProvider = new StateProvider<int>(ctx =>
+    {
+        return 0;
+    });
+
+    myConsumer = new Consumer(ctx =>
+    {
+        // 直接監聽 Provider 實例
+        ctx.Listen(myProvider);
+        print(myProvider.State);
+    });
+
+    // 在不需要時 Dispose
+    // myProvider.Dispose();
+    // myConsumer.Dispose();
+}
+```
+
+### 3. ProviderContainer 與 Resolver 
+
+Physarum 會創建一個 `ProviderContainer` 來快取所有可用的 `Provider`。當通過 `ctx` 查詢時，如果 `Provider` 已存在於快取中，則會直接返回快取。否則會調用 `Resolver` 重建快取並嘗試再次查詢。如果仍不存在則會報錯。
+
+一般情況下，Physarum 只會通過 `FindObjectsByType` 找到場景中所有 `Provider.Behaviour` 及其衍生類別。你可以通過 `ProviderContainer.Resolver` 添加其他 Resolver。
+
+### 4. Provider 的 Singleton 特性
+
+- Physarum 默認所有 `Provider` 都具有單例（Singleton）特性，這意味著每種類型的 `Provider` 在同一時間內應該只能存在一個。
+- 如果需要多個相同類型的 `Provider`，則需要使用 `ProviderKey` 來區分不同的 `Provider`。
+
+### 5. 訂閱機制
+
+- 一般情況下，你應該確保所有訂閱相關（`Watch`, `Listen`）的操作都在 `Build` 方法中完成。
+- Physarum 在訂閱時會先檢查目標是否已被訂閱，所以你不必擔心重複訂閱的情況發生。
+- 如果物件被禁用（Disable），則不會收到通知。
+
+### 6. 生命週期注意事項
+
+由於 Unity 的生命週期中 `Awake` 和 `OnEnable` 會在同一階段執行，因此如果在這個階段建構物件，可能會導致無法保證監聽目標已完成初始化的情況。
+
+因此，任何與 `ctx` 相關的事件都需要在 `Start` 階段（或之後）執行。
+
+## 文檔
+
+待補
+
+## 貢獻
+
+歡迎任何 PR / Issue
