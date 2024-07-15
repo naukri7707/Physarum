@@ -122,25 +122,29 @@ public class MyProvider : StateProvider<MyState>.Behaviour
 - 使用匿名版本時需注意，其 Key 不會被加入到快取中。因此，你需要直接通過實例來操作，或定義專用的 Resolver 和 `ProviderKey` 來從 `ProviderContainer` 快取中獲取實例。
 
 ```csharp
-private static readonly ProviderKeyOf<StateProvider<int>> myProviderKey
-    = ProviderKeyOf<StateProvider<int>>.Create("myKey");
-    
-StateProvider<int> myProvider = new(ctx =>
-    {
-        return 0100;
-    },
-    myProviderKey
-);
+// ProviderKeyOf 可以透過隱式轉換 int 和 string 簡化程式碼，
+// 如果你想要使用其他型態的 Key，則需要調用 Create 方法生成。
+// myProviderKey = ProviderKeyOf<StateProvider<int>>.Create("myKey");
+private static readonly ProviderKeyOf<StateProvider<int>> myProviderKey = "myKey";
 
-Consumer myConsumer = new(ctx =>
-    {
-        var myProvider = ctx.Watch(myProviderKey);
-        print(myProvider.State);
-    }
-);
+StateProvider<int> myProvider;
+
+Consumer myConsumer;
 
 public void Start()
 {
+    myProvider = new(
+        ctx =>
+        {
+            return 0100;
+        },
+        myProviderKey
+    );
+    myConsumer = new(ctx =>
+    {
+        var myProvider = ctx.Watch(myProviderKey);
+        print(myProvider.State);
+    });
     // 啟用 Provider 與 Consumer
     myProvider.Enable();
     myConsumer.Enable();
