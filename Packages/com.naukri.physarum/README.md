@@ -67,8 +67,13 @@ public class CounterViewController : ViewController<int>.Behaviour
     protected override int Build()
     {
         // ViewController 會監聽自己本身的狀態變化，所以這裡雖然沒有監聽相關的程式碼，但 CounterViewController 仍會在狀態變化時重建
-        print(State);
-        return State;
+        var state = State;
+        // 如果 state 是可空類型的話，可以使用 `?? new()` 來設定一個預設值
+        // var state = State ?? new();
+        
+        print(state);
+
+        return state;
     }
 }
 ```
@@ -117,24 +122,32 @@ public class MyProvider : StateProvider<MyState>.Behaviour
 - 使用匿名版本時需注意，其 Key 不會被加入到快取中。因此，你需要直接通過實例來操作，或定義專用的 Resolver 和 `ProviderKey` 來從 `ProviderContainer` 快取中獲取實例。
 
 ```csharp
-StateProvider<int> myProvider;
-Consumer myConsumer;
+private static readonly ProviderKeyOf<StateProvider<int>> myProviderKey
+    = ProviderKeyOf<StateProvider<int>>.Create("myKey");
+    
+StateProvider<int> myProvider = new(ctx =>
+    {
+        return 0100;
+    },
+    myProviderKey
+);
+
+Consumer myConsumer = new(ctx =>
+    {
+        var myProvider = ctx.Watch(myProviderKey);
+        print(myProvider.State);
+    }
+);
 
 public void Start()
 {
-    myProvider = new StateProvider<int>(ctx =>
-    {
-        return 0;
-    });
+    // 啟用 Provider 與 Consumer
+    myProvider.Enable();
+    myConsumer.Enable();
+    // 派發一個 refresh 事件以初始化 Consumer
+    myConsumer.Post(ctx => ctx.Dispatch(ElementEvents.Refresh.Default));
 
-    myConsumer = new Consumer(ctx =>
-    {
-        // 直接監聽 Provider 實例
-        ctx.Listen(myProvider);
-        print(myProvider.State);
-    });
-
-    // 在不需要時 Dispose
+    // 在不需要時 Dispose 掉
     // myProvider.Dispose();
     // myConsumer.Dispose();
 }
