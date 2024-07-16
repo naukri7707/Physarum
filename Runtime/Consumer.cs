@@ -6,6 +6,8 @@ namespace Naukri.Physarum
     public interface IConsumer : IElement
     {
         internal Listener Listener { get; }
+
+        internal void Build();
     }
 
     public partial class Consumer : Element<Listener>, IConsumer
@@ -15,9 +17,11 @@ namespace Naukri.Physarum
             this.build = () => build(ctx);
         }
 
-        protected Consumer(Action build)
+        protected Consumer(IConsumer consumer)
+            : base(consumer)
         {
-            this.build = build;
+            _ = consumer ?? throw new ArgumentNullException(nameof(consumer));
+            build = consumer.Build;
         }
 
         private readonly Action build;
@@ -35,6 +39,9 @@ namespace Naukri.Physarum
                 return context;
             }
         }
+
+        #region methods
+        void IConsumer.Build() => build();
 
         protected override void HandleEvent(object sender, IElementEvent evt)
         {
@@ -55,5 +62,7 @@ namespace Naukri.Physarum
         {
             return new Listener(this);
         }
+
+        #endregion
     }
 }
