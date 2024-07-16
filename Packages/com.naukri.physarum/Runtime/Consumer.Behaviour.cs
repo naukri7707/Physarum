@@ -8,11 +8,13 @@ namespace Naukri.Physarum
         {
             Listener IConsumer.Listener => (Listener)ctx;
 
+            void IConsumer.Build() => Build();
+
             protected abstract void Build();
 
             protected override Element<Listener> BuildElement()
             {
-                return new Consumer(Build);
+                return new Consumer(this);
             }
         }
     }
