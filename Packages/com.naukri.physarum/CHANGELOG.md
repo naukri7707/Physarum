@@ -2,8 +2,10 @@
 
 ## [~0.3.0]
 
-- 修正 Provider.Behaviour 快取到核心 Provider 錯誤
-- 新增 int, string 對 ProviderKeyOf 的隱式轉換
+- 新增 `int`, `string` 對 `ProviderKeyOf` 的隱式轉換
+
+- 修正 `ProviderContainer` 快取錯誤
+- 修正 `Consumer.HandleEvent()` 不會被框架調用的問題
 
 ## [0.2.0] - 2024-07-16
 
