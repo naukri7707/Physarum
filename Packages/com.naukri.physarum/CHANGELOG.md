@@ -1,7 +1,8 @@
 # Changelog
 
-## [~0.3.0]
+## [0.3.0] - 2024-07-17
 
+- 新增 `AsyncValue` 處理異步資料
 - 新增 `int`, `string` 對 `ProviderKeyOf` 的隱式轉換
 
 - 修正 `ProviderContainer` 快取錯誤

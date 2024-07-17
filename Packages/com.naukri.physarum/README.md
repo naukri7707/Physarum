@@ -116,15 +116,26 @@ public class MyProvider : StateProvider<MyState>.Behaviour
 }
 ```
 
-### 2. 匿名 Provider / Consumer 的使用
+### 2. 訂閱機制
 
-- Physarum 提供了非繼承自 `MonoBehaviour` 的匿名版本。這可用於為已有基底類別的物件添加 Provider / Consumer 特性。實際上，Physarum 提供的 Behaviour 也是通過此方法實現的。
-- 使用匿名版本時需注意，其 Key 不會被加入到快取中。因此，你需要直接通過實例來操作，或定義專用的 Resolver 和 `ProviderKey` 來從 `ProviderContainer` 快取中獲取實例。
+- 一般情況下，你應該確保所有訂閱相關（`Watch`, `Listen`）的操作都在 `Build` 方法中完成。
+- Physarum 在訂閱時會先檢查目標是否已被訂閱，所以你不必擔心重複訂閱的情況發生。
+- 如果物件被禁用（Disable），則不會收到通知。
+
+### 3. 生命週期注意事項
+
+由於 Unity 的生命週期中 `Awake` 和 `OnEnable` 會在同一階段執行，因此如果在這個階段建構物件，可能會導致無法保證監聽目標已完成初始化的情況。
+
+因此，任何與 `ctx` 相關的事件都需要在 `Start` 階段（或之後）執行。
+
+### 4. 匿名 Provider / Consumer 的使用
+
+- Physarum 提供了非繼承自 `MonoBehaviour` 的版本可供匿名使用。這可用於為已有基底類別的 `Component` 添加 Provider / Consumer 特性。實際上，Physarum 提供的 `XXX.Behaviour` 也是通過此方法實現的。
 
 ```csharp
-// ProviderKeyOf 可以透過隱式轉換 int 和 string 簡化程式碼，
+// ProviderKeyOf 可以透過隱式轉換 int 和 string 來生成，
 // 如果你想要使用其他型態的 Key，則需要調用 Create 方法生成。
-// myProviderKey = ProviderKeyOf<StateProvider<int>>.Create("myKey");
+// e.g. myProviderKey = ProviderKeyOf<StateProvider<int>>.Create(3.14F);
 private static readonly ProviderKeyOf<StateProvider<int>> myProviderKey = "myKey";
 
 StateProvider<int> myProvider;
@@ -136,12 +147,13 @@ public void Start()
     myProvider = new(
         ctx =>
         {
-            return 0100;
+            return 100;
         },
         myProviderKey
     );
     myConsumer = new(ctx =>
     {
+        // 由 ProviderKeyOf 泛型推導出泛型為 StateProvider<int>，因此不須手動指派
         var myProvider = ctx.Watch(myProviderKey);
         print(myProvider.State);
     });
@@ -157,28 +169,64 @@ public void Start()
 }
 ```
 
-### 3. ProviderContainer 與 Resolver 
+### 5. ProviderContainer 與 Resolver 
 
-Physarum 會創建一個 `ProviderContainer` 來快取所有可用的 `Provider`。當通過 `ctx` 查詢時，如果 `Provider` 已存在於快取中，則會直接返回快取。否則會調用 `Resolver` 重建快取並嘗試再次查詢。如果仍不存在則會報錯。
+Physarum 會創建一個 `ProviderContainer` 來快取所有可用的 `Provider`。它的 Key 會在實例化時被主動註冊到 `ProviderContainer` 中並在銷毀時刪除，當通過 `ctx` 查詢時，如果 `Provider` 已存在於快取之中會直接返回快取。若不存在則會調用 `Resolver` 重建快取並再次嘗試查詢。如果仍不存在則會報錯。
 
-一般情況下，Physarum 只會通過 `FindObjectsByType` 找到場景中所有 `Provider.Behaviour` 及其衍生類別。你可以通過 `ProviderContainer.Resolver` 添加其他 Resolver。
+一般情況下，Physarum 只會通過 `FindObjectsByType` 找到場景中所有 `Provider.Behaviour` 及其衍生類別進行快取。但你可以通過 `ProviderContainer.Resolver` 添加其他 Resolver。
 
-### 4. Provider 的 Singleton 特性
+### 6. Provider 的 Singleton 特性
 
 - Physarum 默認所有 `Provider` 都具有單例（Singleton）特性，這意味著每種類型的 `Provider` 在同一時間內應該只能存在一個。
-- 如果需要多個相同類型的 `Provider`，則需要使用 `ProviderKey` 來區分不同的 `Provider`。
+- 如果需要多個相同類型的 `Provider`想透過 `ctx` 進行查詢，則需要使用 `ProviderKey` 來區分不同的 `Provider`。
 
-### 5. 訂閱機制
+### 7. 異步處理
 
-- 一般情況下，你應該確保所有訂閱相關（`Watch`, `Listen`）的操作都在 `Build` 方法中完成。
-- Physarum 在訂閱時會先檢查目標是否已被訂閱，所以你不必擔心重複訂閱的情況發生。
-- 如果物件被禁用（Disable），則不會收到通知。
+你可以使用 `AsyncValue<T>` 處理異步資料
 
-### 6. 生命週期注意事項
+```csharp
+public class CounterProvider : StateProvider<AsyncValue<int>>.Behaviour
+{
+    protected override AsyncValue<int> Build()
+    {
+        // 初始狀態
+        return AsyncValue<int>.Data(0);
+    }
 
-由於 Unity 的生命週期中 `Awake` 和 `OnEnable` 會在同一階段執行，因此如果在這個階段建構物件，可能會導致無法保證監聽目標已完成初始化的情況。
+    // 模擬網路請求
+    public async void AddOneRequest(bool failed)
+    {
+        var state = State;
+        SetState(AsyncValue<int>.Loading()); // 改為 loading 狀態
+        await Task.Delay(1000);
 
-因此，任何與 `ctx` 相關的事件都需要在 `Start` 階段（或之後）執行。
+        if (failed) // 模擬失敗
+        {
+            SetState(AsyncValue<int>.Error(new InvalidOperationException("Add one failed")));
+        }
+        else // 模擬成功
+        {
+            SetState(AsyncValue<int>.Data(state.Value + 1));
+        }
+    }
+}
+
+public class CounterConsumer : Consumer.Behaviour
+{
+    protected override void Build()
+    {
+        var provider = ctx.Watch<CounterProvider>();
+        var providerState = provider.State;
+
+        // 針對個別狀況進行處理
+        providerState.When(
+            s => print($"New value: {s}"),
+            () => print($"Loading..."),
+            (err) => Debug.LogError($"Error: {err}")
+        );
+    }
+}
+```
 
 ## 文檔
 
