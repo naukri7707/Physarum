@@ -80,6 +80,39 @@ namespace Naukri.Physarum
         #endregion
     }
 
+    public static class AsyncValueExtensions
+    {
+        #region methods
+
+        public static void SetAsyncValueToData<TValue>(
+            this IStateProvider<AsyncValue<TValue>> self,
+            TValue data
+        )
+            where TValue : IEquatable<TValue>
+        {
+            self.SetState(AsyncValue<TValue>.Data(data));
+        }
+
+        public static void SetAsyncValueToLoading<TValue>(
+            this IStateProvider<AsyncValue<TValue>> self
+        )
+            where TValue : IEquatable<TValue>
+        {
+            self.SetState(AsyncValue<TValue>.Loading());
+        }
+
+        public static void SetAsyncValueToError<TValue>(
+            this IStateProvider<AsyncValue<TValue>> self,
+            Exception exception
+        )
+            where TValue : IEquatable<TValue>
+        {
+            self.SetState(AsyncValue<TValue>.Error(exception));
+        }
+
+        #endregion
+    }
+
     internal record AsyncData<TValue> : AsyncValue<TValue>
         where TValue : IEquatable<TValue>
     {
