@@ -37,35 +37,31 @@ namespace Naukri.Physarum.Utils
         }
 
         public static T FindOrCreateComponent(
-            string name = null,
             bool dontDestroyOnLoad = false,
             FindObjectsInactive findObjectsInactive = FindObjectsInactive.Exclude
         )
         {
-            if (componentCache == null)
+            if (!TryFindComponent(out var component, findObjectsInactive))
             {
-                componentCache = FindImpl(findObjectsInactive);
+                var type = typeof(T);
+                var go = new GameObject(type.Name, type);
 
-                if (componentCache == null)
+                if (dontDestroyOnLoad)
                 {
-                    var type = typeof(T);
-                    var goName = name ?? type.Name;
-                    var go = new GameObject(goName, type);
-
-                    if (dontDestroyOnLoad)
-                    {
-                        Object.DontDestroyOnLoad(go);
-                    }
-
-                    componentCache = go.GetComponent<T>();
-                    if (componentCache is IComponentCreatedHandler createdHandler)
-                    {
-                        createdHandler.OnComponentCreated();
-                    }
+                    Object.DontDestroyOnLoad(go);
                 }
+
+                component = go.GetComponent<T>();
+                if (component is IComponentCreatedHandler createdHandler)
+                {
+                    createdHandler.OnComponentCreated();
+                }
+
+                componentCache = component;
+                return component;
             }
 
-            return componentCache;
+            return component;
         }
 
         public static void Invalidate()
