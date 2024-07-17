@@ -2,7 +2,7 @@
   "name": "com.naukri.physarum",
   "author": "Naukri",
   "displayName": "Physarum",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "unity": "2024.1",
   "description": "Physarum is a reactive framework for Unity.\n\nKey features:\n\u25aa Integrates state management, dependency injection, and service locator\n\u25aa Simplifies complex system design\n\u25aa Enhances game development efficiency and flexibility\n\nWith Physarum, developers can:\n\u25aa Easily build scalable game architectures\n\u25aa Better manage and maintain large projects\n\u25aa Focus on game logic rather than low-level implementations\n\nIdeal for Unity developers seeking efficient and maintainable game development solutions."
 }
