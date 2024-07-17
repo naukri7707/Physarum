@@ -18,7 +18,7 @@ namespace Naukri.Physarum.Core
     }
 
     [AddComponentMenu("")] // Hide ProviderContainer in AddComponent's Menu
-    public sealed partial class ProviderContainer : MonoBehaviour
+    public sealed partial class ProviderContainer : MonoBehaviour, IComponentCreatedHandler
     {
         public event EventHandler<ResolveEventArgs> Resolver = (_, e) =>
         {
@@ -107,6 +107,11 @@ namespace Naukri.Physarum.Core
             ComponentLocator<ProviderContainer>.Invalidate();
         }
 
+        void IComponentCreatedHandler.OnComponentCreated()
+        {
+            gameObject.name = kInstanceName;
+        }
+
         #endregion
     }
 
@@ -117,7 +122,6 @@ namespace Naukri.Physarum.Core
         internal static ProviderContainer LocateOrCreate()
         {
             var container = ComponentLocator<ProviderContainer>.FindOrCreateComponent(
-                name: kInstanceName,
                 dontDestroyOnLoad: true
             );
 
