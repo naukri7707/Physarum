@@ -4,25 +4,11 @@ namespace Naukri.Physarum
 
     public static class ElementEvents
     {
-        public record Initialize : IElementEvent
+        public record Invalidate : IElementEvent
         {
-            private static Initialize _default;
+            private static Invalidate _default;
 
-            public static Initialize Default => _default ??= new();
-        }
-
-        public record Enable : IElementEvent
-        {
-            private static Enable _default;
-
-            public static Enable Default => _default ??= new();
-        }
-
-        public record Disable : IElementEvent
-        {
-            private static Disable _default;
-
-            public static Disable Default => _default ??= new();
+            public static Invalidate Default => _default ??= new();
         }
 
         public record Refresh : IElementEvent

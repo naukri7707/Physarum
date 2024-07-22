@@ -53,6 +53,10 @@ namespace Naukri.Physarum
                     build();
                     break;
 
+                case ElementEvents.Invalidate:
+                    context.UnsubscribeAllNotifiers();
+                    break;
+
                 default:
                     break;
             }

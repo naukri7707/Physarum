@@ -28,6 +28,8 @@ namespace Naukri.Physarum
             where TProvider : IProvider;
         Subscription Listen<TProvider>(TProvider provider)
             where TProvider : IProvider;
+        void Refresh();
+        void Invalidate();
         void Dispatch(IElementEvent evt);
         void DispatchListeners(IElementEvent evt);
     }

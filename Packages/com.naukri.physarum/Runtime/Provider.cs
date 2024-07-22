@@ -67,6 +67,21 @@ namespace Naukri.Physarum
             }
         }
 
+        protected override void HandleEvent(object sender, IElementEvent evt)
+        {
+            base.HandleEvent(sender, evt);
+
+            switch (evt)
+            {
+                case ElementEvents.Invalidate:
+                    context.UnsubscribeAllNotifiers();
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
         private static void RegisterToContainer(IProvider provider)
         {
             var container = ProviderContainer.LocateOrCreate();

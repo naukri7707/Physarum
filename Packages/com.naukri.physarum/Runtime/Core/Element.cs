@@ -6,13 +6,11 @@ namespace Naukri.Physarum.Core
 {
     public interface IElement
     {
-        public bool IsInitialized { get; }
-        public bool IsEnable { get; }
+        public bool IsValidated { get; }
 
-        public void Enable();
-        public void Disable();
         public void Post(Action<IContext> action);
         internal void HandleEvent(object sender, IElementEvent evt);
+        internal void EnsureValidated();
     }
 
     public abstract partial class Element : IElement, IDisposable
@@ -40,44 +38,51 @@ namespace Naukri.Physarum.Core
         #endregion
 
         private readonly EventHandler<IElementEvent> eventHandler;
+        private bool isValidated;
 
-        public abstract bool IsInitialized { get; }
-        public abstract bool IsEnable { get; }
+        public bool IsValidated => isValidated;
 
         #region methods
-        public abstract void Enable();
-
-        public abstract void Disable();
-
         public abstract void Post(Action<IContext> action);
+
+        public void AssertValidated()
+        {
+            if (!IsValidated)
+            {
+                throw new InvalidOperationException(
+                    $"{GetType().GetFriendlyGenericName()} was invalidated. You must refresh it first."
+                );
+            }
+        }
 
         void IElement.HandleEvent(object sender, IElementEvent evt) => HandleEvent(sender, evt);
 
-        internal abstract void EnsureInitialize();
+        void IElement.EnsureValidated() => EnsureValidated();
 
-        internal static void DispatchEvent(Element element, IElementEvent evt)
+        internal abstract void EnsureValidated();
+
+        internal static void DispatchEvent(Element element, object sender, IElementEvent evt)
         {
-            element.eventHandler?.Invoke(element, evt);
+            element.eventHandler?.Invoke(sender, evt);
         }
 
-        protected void EnsureActive()
+        protected virtual void HandleEvent(object sender, IElementEvent evt)
         {
-            if (!IsEnable)
+            switch (evt)
             {
-                throw new InvalidOperationException(
-                    $"{GetType().GetFriendlyGenericName()} is not active."
-                );
-            }
-            else
-            {
-                if (!IsInitialized)
-                {
-                    EnsureInitialize();
-                }
+                case ElementEvents.Invalidate:
+                    isValidated = false;
+                    break;
+
+                case ElementEvents.Refresh:
+                    isValidated = true;
+                    break;
+
+                default:
+                    break;
             }
         }
 
-        protected abstract void HandleEvent(object sender, IElementEvent evt);
         #endregion
 
         #region IDisposable
@@ -116,15 +121,7 @@ namespace Naukri.Physarum.Core
 
         #endregion
 
-        #region fields
-        private bool isInitialized;
-        private bool isEnable;
         private protected readonly TContext context;
-        #endregion
-
-        #region properties
-        public override sealed bool IsInitialized => isInitialized;
-        public sealed override bool IsEnable => isEnable;
 
         [SuppressMessage(
             "Style",
@@ -145,69 +142,18 @@ namespace Naukri.Physarum.Core
             }
         }
 
-        #endregion
-
         #region methods
-
-        public override sealed void Enable()
-        {
-            if (isEnable)
-            {
-                return;
-            }
-
-            isEnable = true;
-            ctx.Dispatch(ElementEvents.Enable.Default);
-        }
-
-        public sealed override void Disable()
-        {
-            if (!isEnable)
-            {
-                return;
-            }
-
-            isEnable = false;
-            ctx.Dispatch(ElementEvents.Disable.Default);
-        }
 
         public override void Post(Action<IContext> action)
         {
             action(ctx);
         }
 
-        internal sealed override void EnsureInitialize()
+        internal override void EnsureValidated()
         {
-            if (!isInitialized)
+            if (!IsValidated)
             {
-                isInitialized = true;
-                ctx.Dispatch(ElementEvents.Initialize.Default);
-            }
-        }
-
-        protected override void HandleEvent(object sender, IElementEvent evt)
-        {
-            switch (evt)
-            {
-                case ElementEvents.Enable:
-                    // Only dispatch refresh if the element has already started
-                    // This effectively handles scenarios like scene loading where a large number of Elements are loaded instantaneously
-                    // It addresses cases where Consumers are activated but Providers haven't been constructed yet (or hasn't awake in UnityObject)
-                    // The Refresh event (which triggers the Build method) will not dispatch (but still dispatch on Start)
-                    // So all of the elements build actions will delayed until the Start phase
-                    // By this time, all activated Elements are guaranteed to have completed construction (Awake)
-                    if (IsInitialized)
-                    {
-                        ctx.Dispatch(ElementEvents.Refresh.Default);
-                    }
-                    break;
-
-                case ElementEvents.Initialize:
-                    ctx.Dispatch(ElementEvents.Refresh.Default);
-                    break;
-
-                default:
-                    break;
+                ctx.Refresh();
             }
         }
 
@@ -220,7 +166,6 @@ namespace Naukri.Physarum.Core
         {
             if (disposing)
             {
-                Disable();
                 ctx.Dispose();
             }
         }

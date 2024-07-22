@@ -12,10 +12,9 @@ namespace Naukri.Physarum.Core
 
         public override void DispatchListeners(IElementEvent evt)
         {
-            var enabledListeners = listeners.Where(it => it.element.IsEnable).ToArray();
-            foreach (var listener in enabledListeners)
+            foreach (var listener in listeners)
             {
-                Element.DispatchEvent(listener.element, evt);
+                Element.DispatchEvent(listener.element, element, evt);
             }
         }
 

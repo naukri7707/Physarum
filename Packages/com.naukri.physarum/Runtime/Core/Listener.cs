@@ -79,7 +79,6 @@ namespace Naukri.Physarum.Core
         internal void Subscribe(Notifier notifier)
         {
             notifier.listeners.Add(this);
-            notifier.element.EnsureInitialize(); // Start the notifier's element if not started.
             notifiers.Add(notifier);
         }
 
@@ -89,16 +88,21 @@ namespace Naukri.Physarum.Core
             notifiers.Remove(notifier);
         }
 
+        internal void UnsubscribeAllNotifiers()
+        {
+            foreach (var notifier in notifiers.ToArray())
+            {
+                Unsubscribe(notifier);
+            }
+
+            notifiers.Clear();
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                foreach (var notifier in notifiers.ToArray())
-                {
-                    Unsubscribe(notifier);
-                }
-
-                notifiers.Clear();
+                UnsubscribeAllNotifiers();
             }
         }
 

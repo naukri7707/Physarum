@@ -46,7 +46,7 @@ namespace Naukri.Physarum
         {
             get
             {
-                EnsureActive();
+                AssertValidated();
                 return state;
             }
         }
@@ -55,14 +55,14 @@ namespace Naukri.Physarum
 
         public bool SetState(TState state)
         {
-            EnsureActive();
+            AssertValidated();
             return SetStateImpl(state);
         }
 
         public bool SetState(Func<TState, TState> update)
         {
-            EnsureActive();
             _ = update ?? throw new ArgumentNullException(nameof(update));
+            AssertValidated();
 
             var oldState = state;
             var newState = update(oldState);
@@ -71,8 +71,8 @@ namespace Naukri.Physarum
 
         public async Task<bool> SetStateAsync(Func<TState, Task<TState>> update)
         {
-            EnsureActive();
             _ = update ?? throw new ArgumentNullException(nameof(update));
+            AssertValidated();
 
             var oldState = state;
             var newState = await update(oldState);

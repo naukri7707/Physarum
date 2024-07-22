@@ -120,22 +120,21 @@ public class MyProvider : StateProvider<MyState>.Behaviour
 
 - 一般情況下，你應該確保所有訂閱相關（`Watch`, `Listen`）的操作都在 `Build` 方法中完成。
 - Physarum 在訂閱時會先檢查目標是否已被訂閱，所以你不必擔心重複訂閱的情況發生。
-- 如果物件被禁用（Disable），則不會收到通知。
+- 所有 `Provider` 會在首次被消費（`Read`, `Watch`, `Listen`）時刷新 (調用 `Build()`) 一次，之後只會在其訂閱的 `Provider` 狀態變化時重建。
 
-### 3. 生命週期注意事項
+### 3. Behaviour 類 (XXX.Behaviour) 的生命週期
 
-由於 Unity 的生命週期中 `Awake` 和 `OnEnable` 會在同一階段執行，因此如果在這個階段建構物件，可能會導致無法保證監聽目標已完成初始化的情況。
-
-因此，任何與 `ctx` 相關的事件都需要在 `Start` 階段（或之後）執行。
+- 由於 Unity 的生命週期中相同物件的 Awake 和 Enable 會在同一階段執行，因此如果在這個階段刷新將無法保證其消費的目標已完成初始化。因此，任何操作都需要在 Start 階段（或之後）執行。
+- `Provider` 和 `Consumer` 會在 Enable (首次啟用會延後到 Start) 階段執行自行刷新一次。並在 Disable 時調用 `Invalidate()` 取消所有訂閱。
 
 ### 4. 匿名 Provider / Consumer 的使用
 
-- Physarum 提供了非繼承自 `MonoBehaviour` 的版本可供匿名使用。這可用於為已有基底類別的 `Component` 添加 Provider / Consumer 特性。實際上，Physarum 提供的 `XXX.Behaviour` 也是通過此方法實現的。
+- Physarum 提供了非繼承自 `MonoBehaviour` 的版本可供匿名使用。這可用於為已有基底類別的 `Component` 添加 Provider / Consumer 特性。實際上，Physarum 提供的 Behaviour 也是通過此方法實現的。
 
 ```csharp
-// ProviderKeyOf 可以透過隱式轉換 int 和 string 來生成，
+// ProviderKeyOf 可以透過隱式轉換 int 和 string 簡化程式碼，
 // 如果你想要使用其他型態的 Key，則需要調用 Create 方法生成。
-// e.g. myProviderKey = ProviderKeyOf<StateProvider<int>>.Create(3.14F);
+// myProviderKey = ProviderKeyOf<StateProvider<int>>.Create("myKey");
 private static readonly ProviderKeyOf<StateProvider<int>> myProviderKey = "myKey";
 
 StateProvider<int> myProvider;
@@ -153,15 +152,12 @@ public void Start()
     );
     myConsumer = new(ctx =>
     {
-        // 由 ProviderKeyOf 泛型推導出泛型為 StateProvider<int>，因此不須手動指派
         var myProvider = ctx.Watch(myProviderKey);
         print(myProvider.State);
     });
-    // 啟用 Provider 與 Consumer
-    myProvider.Enable();
-    myConsumer.Enable();
-    // 派發一個 refresh 事件以初始化 Consumer
-    myConsumer.Post(ctx => ctx.Dispatch(ElementEvents.Refresh.Default));
+
+    // 簡單派發一個 refresh 事件以初始化 Consumer
+    myConsumer.Post(ctx => ctx.Refresh());
 
     // 在不需要時 Dispose 掉
     // myProvider.Dispose();
@@ -197,7 +193,10 @@ public class CounterProvider : StateProvider<AsyncValue<int>>.Behaviour
     public async void AddOneRequest(bool failed)
     {
         var state = State;
-        SetState(AsyncValue<int>.Loading()); // 改為 loading 狀態
+        // 改為 loading 狀態
+        // SetAsyncValue 可以使用擴充方法來簡化 e.g. this.SetAsyncValueToLoading();
+        SetState(AsyncValue<int>.Loading()); 
+
         await Task.Delay(1000);
 
         if (failed) // 模擬失敗
@@ -222,7 +221,7 @@ public class CounterConsumer : Consumer.Behaviour
         providerState.When(
             s => print($"New value: {s}"),
             () => print($"Loading..."),
-            (err) => Debug.LogError($"Error: {err}")
+            err => Debug.LogError($"Error: {err}")
         );
     }
 }
